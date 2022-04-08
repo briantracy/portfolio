@@ -30,7 +30,7 @@ FORMATWARN := -Wformat=2 -Wformat-truncation -Wformat-overflow=2 \
 MACROWARN := -Wundef -Wunused-macros
 
 # Prevent unaligned casting and const erasure
-CASTWARN := -Wcast-qual -Wcast-align=strict
+CASTWARN := -Wcast-qual -Wcast-align
 
 # Semantic issues
 SEMWARN := -Wnull-dereference
