@@ -1,0 +1,21 @@
+
+
+#############################
+# Autochthon ISA Definition #
+#############################
+
+
+# Address of call will be checked
+Call (address)
+Ret ()
+
+WriteByte (register)
+ReadByte (register)
+
+Nop ()
+Debug ()
+Exit ()
+
+
+
+
