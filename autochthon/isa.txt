@@ -16,6 +16,15 @@ Nop ()
 Debug ()
 Exit ()
 
+Load (address, register)
+Store (register, address)
+
+
+Add (register, register, register)
+Subtracy (register, register, register)
+Multiply (register, register, register)
+Divide (register, register, register)
+
 
 
 

@@ -36,23 +36,21 @@ class Operand(Enum):
 
     def size_in_bytes(self):
         if self == Operand.Word:
-            return 1
-        if self == Operand.Register:
             return 4
+        if self == Operand.Register:
+            return 1
         if self == Operand.Address:
             return 4
         raise AssertionError(f'Invalid Operand enum state: {self}')
 
 
 def main(args: list[str]):
-
     validate_args(args)
     raw_lines = get_lines_from_file(args[2])
-    print(raw_lines)
     processed = preprocess_instructions(raw_lines)
-    print(processed)
     instructions = create_instruction_list(processed)
     print(list(map(str, instructions)))
+    generate_rust_vm_code(list(instructions))
 
 def validate_args(args: list[str]):
     assert len(args) > 0, 'missing program name from command line arguments'
@@ -87,9 +85,78 @@ def create_instruction_list(processed_lines: list[str]) -> list[Instruction]:
     return instructions
 
 def split_instruction(line: str) -> (str, list[str]):
+    # 'LoadByte(address,register)' -> ('LoadByte', 'address,register')
     open_paren = line.index('(')
     close_paren = line.index(')')
     return (line[0:open_paren], line[open_paren + 1:close_paren])
+
+
+def generate_rust_vm_code(instructions: list[Instruction]):
+    generate_instructions_enum(instructions)
+    generate_instructions_impl(instructions)
+
+
+def tab(n: int) -> str:
+    return ' ' * (n * 4)
+
+def generate_instructions_enum(instructions: list[Instruction]):
+    print('#[derive(Debug)]')
+    print('enum Instruction {')
+    for instr in instructions:
+        print(f'\t{instr.name}({", ".join(map(rust_type_from_operand, instr.operands))}),')
+    print('}\n')
+
+def generate_instructions_impl(instructions: list[Instruction]):
+    print('impl Instruction {')
+    generate_insruction_size_fn(instructions)
+    generate_decode_fn(instructions)
+    print('}')
+
+def generate_insruction_size_fn(instructions: list[Instruction]):
+    print('\tfn size(&self) -> i8 {')
+    print('\t\tmatch self {')
+    for instr in instructions:
+        print(f'\t\t\t{size_match_arm_from_instruction(instr)}')
+    print('\t\t}')
+    print('\t}')
+
+def generate_decode_fn(instructions: list[Instruction]):
+    print(f'{tab(1)}fn decode(bytes: &[u8]) -> Option<Self> {{')
+    print(f'{tab(2)}match bytes {{')
+    for instr in instructions:
+        print(f'{tab(3)}{decode_match_arm_from_instruction(instr)}')
+    print(f'{tab(3)}_ => None')
+    print(f'{tab(2)}}}')
+    print(f'{tab(1)}}}')
+
+def rust_type_from_operand(op: Operand) -> str:
+    if op == Operand.Word or op == Operand.Address:
+        return 'i32'
+    else:
+        return 'u8'
+
+def size_match_arm_from_instruction(instr: Instruction) -> str:
+    op_underscores = ', '.join(map(lambda o: '_', instr.operands))
+    return f'Self::{instr.name}({op_underscores}) => {instr.size_in_bytes()},'
+
+def decode_match_arm_from_instruction(instr: Instruction) -> str:
+    initializers = []
+    binding_idx = 0
+
+    def binding_list(start: int, length: int, deref: bool) -> str:
+        return ', '.join(f'{"*" if deref else ""}b{i}' for i in range(start, start + length))
+
+    for op in instr.operands:
+        if op == Operand.Register:
+            initializers.append(f'*b{binding_idx}')
+            binding_idx += 1
+        else:
+            initializers.append(f'convert({binding_list(binding_idx, 4, True)})')
+            binding_idx += 4
+
+    bindings = binding_list(0, binding_idx, False) + ', ' if binding_idx != 0 else ''
+    return f'[{instr.opcode}, {bindings} ..] => Some(Self::{instr.name}({", ".join(initializers)})),'
+
 
 if __name__ == '__main__':
     main(sys.argv)
