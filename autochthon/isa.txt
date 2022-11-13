@@ -4,27 +4,74 @@
 # Autochthon ISA Definition #
 #############################
 
+instructions {
 
-# Address of call will be checked
-Call (address)
-Ret ()
+    # Address of call will be checked
+    Call (address)
+    Ret ()
 
-WriteByte (register)
-ReadByte (register)
+    # IO
+    WriteByte (register)
+    ReadByte (register)
 
-Nop ()
-Debug ()
-Exit ()
+    Debug ()
+    Exit ()
 
-Load (address, register)
-Store (register, address)
+    # Memory touching instructions
+    Load (address, register)
+    Store (register, address)
 
+    # Fill a register with a literal value
+    Fill (word, register)
 
-Add (register, register, register)
-Subtracy (register, register, register)
-Multiply (register, register, register)
-Divide (register, register, register)
-
-
+    Push (register)
+    Pop (register)
 
 
+
+    Nop ()
+
+
+    Add (register, register, register)
+    Subtracy (register, register, register)
+    Multiply (register, register, register)
+    Divide (register, register, register)
+
+
+}
+
+registers {
+
+    # Instruction pointer points to the *currently executing* instruction
+    Ip
+
+    # Stack and Base Pointers
+    Sp
+    Bp
+
+    # Argument (caller saved) registers
+    A1
+    A2
+    A3
+    A4
+
+    # General Purpose (callee saved) registers
+    R1
+    R2
+    R3
+    R4
+    R5
+    R6
+    R7
+    R8
+}
+
+# Binary Format
+#
+# 
+#
+
+
+layout {
+    magic = avm
+}

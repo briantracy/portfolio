@@ -103,7 +103,7 @@ def generate_instructions_enum(instructions: list[Instruction]):
     print('#[derive(Debug)]')
     print('enum Instruction {')
     for instr in instructions:
-        print(f'\t{instr.name}({", ".join(map(rust_type_from_operand, instr.operands))}),')
+        print(f'\t{instr.name}({", ".join(map(rust_type_from_operand, instr.operands))}), /* {instr.opcode} */')
     print('}\n')
 
 def generate_instructions_impl(instructions: list[Instruction]):
